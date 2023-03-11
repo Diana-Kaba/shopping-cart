@@ -1,6 +1,62 @@
 let itemBox = document.querySelectorAll(".item_box"); // блок каждого товара
 let cartCont = document.getElementById("cart_content"); // блок вывода данных корзины
 
+function count() {
+  let count = 0;
+  if (getCartData()) {
+    let cartData = getCartData();
+    console.log(cartData);
+    for (const key in cartData) {
+      count += cartData[key][2];
+      //  console.log(cartData[key]);
+    }
+  }
+  return count;
+}
+
+function price() {
+  let price = 0;
+  if (getCartData()) {
+    let cartData = getCartData();
+    for (const key in cartData) {
+      cartData[key][1] *= cartData[key][2];
+      price += cartData[key][1];
+    }
+  }
+  return price;
+}
+
+// count();
+
+function removeItem(minus) {
+  if (getCartData()) {
+    let cartData = getCartData();
+    let item = minus.getAttribute("data-id");
+    cartData[item][2] = cartData[item][2] - 1;
+    if (cartData[item][2] == 0) {
+      delete cartData[item];
+    }
+    setCartData(cartData);
+
+    let length = Object.getOwnPropertyNames(cartData);
+    if (length == 0) {
+      clearCart();
+    }
+
+    openCart(cartData);
+  }
+}
+
+function addItem(plus) {
+  if (getCartData()) {
+    let cartData = getCartData();
+    let item = plus.getAttribute("data-id");
+    cartData[item][2] = cartData[item][2] + 1;
+    setCartData(cartData);
+    openCart(cartData);
+  }
+}
+
 // Записываем данные в LocalStorage
 function setCartData(o) {
   localStorage.setItem("cart", JSON.stringify(o));
@@ -43,35 +99,25 @@ function openCart(e) {
   // если что-то в корзине уже есть, формируем таблицу
   if (cartData !== null) {
     let cardTable = "";
-    cardTable =
-      '<table class="shopping_list"><tr><th>Наименование</th><th>Цена</th><th>Кол-во</th><th><button id="plus">+</button></th><th><button id="minus">-</button></th></tr>';
+    cardTable = `<table class="shopping_list"><tr><th>Наименование</th><th>Цена</th><th>Кол-во</th><th>Удалить товар</th><th>Добавить товар</th></tr>`;
     for (let items in cartData) {
       cardTable += "<tr>";
       for (let i = 0; i < cartData[items].length; i++) {
         cardTable += "<td>" + cartData[items][i] + "</td>";
       }
-      cardTable += "</tr>";
+      cardTable += `<td><span class="minus" onclick="removeItem(this)" data-id="${items}">-</span></td><td><span class="plus" onclick="addItem(this)" data-id="${items}">+</span></td></tr>`;
     }
+    cardTable += `<tr>
+      <td>Итого</td>
+      <td>${price()}</td>
+      <td> ${count()}</td><td></td><td></td>
+      </tr>`;
     cardTable += "<table>";
     cartCont.innerHTML = cardTable;
   } else {
     // если в корзине пусто, то сигнализируем об этом
     cartCont.innerHTML = "В корзине пусто!";
   }
-}
-
-function add() {
-  let cartData = getCartData();
-
-  cartData[itemId][2] += 1;
-}
-
-function sub() {
-  let cartData = getCartData();
-
-  cartData[itemId][2] -= 1;
-  // localStorage.removeItem("cart");
-  // cartCont.innerHTML = "Корзина очишена.";
 }
 
 // Функция очистки корзины
@@ -88,6 +134,3 @@ for (let i = 0; i < itemBox.length; i++) {
 document.getElementById("checkout").addEventListener("click", openCart);
 // Обработчик события на кнопку Очистить корзину
 document.getElementById("clear_cart").addEventListener("click", clearCart);
-
-document.getElementById("plus").addEventListener("click", add);
-document.getElementById("minus").addEventListener("click", sub);
